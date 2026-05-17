@@ -1,14 +1,10 @@
 {
   "applinks": {
+    "apps": [],
     "details": [
       {
-        "appIDs": ["SN92SM43PU.com.seelo.sfit"],
-        "components": [
-          {
-            "/": "/auth/reset-password",
-            "comment": "Match reset password deep links from Supabase"
-          }
-        ]
+        "appID": "SN92SM43PU.com.seelo.sfit",
+        "paths": ["*"]
       }
     ]
   }

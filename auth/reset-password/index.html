@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Réinitialisation du mot de passe — S_Fit</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0a0a0a;
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .container {
+      width: 100%;
+      max-width: 420px;
+    }
+    h1 {
+      font-size: 2.25rem;
+      letter-spacing: -0.02em;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+    }
+    h1 .italic {
+      font-style: italic;
+      font-weight: 400;
+      color: rgba(255,255,255,0.7);
+    }
+    .eyebrow {
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 0.75rem;
+    }
+    .description {
+      color: rgba(255,255,255,0.6);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin: 1rem 0 2rem 0;
+    }
+    .field {
+      margin-bottom: 1rem;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      transition: border-color 0.2s;
+    }
+    .field:focus-within { border-color: rgba(255,255,255,0.4); }
+    .field label {
+      display: block;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 0.25rem;
+    }
+    .field input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #ffffff;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+    button {
+      width: 100%;
+      background: #ffffff;
+      color: #0a0a0a;
+      border: none;
+      border-radius: 999px;
+      padding: 1rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: opacity 0.2s;
+      font-family: inherit;
+    }
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .alert {
+      padding: 1rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+    .alert.error {
+      background: rgba(239, 68, 68, 0.15);
+      color: rgb(252, 165, 165);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .alert.success {
+      background: rgba(34, 197, 94, 0.15);
+      color: rgb(134, 239, 172);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    .hidden { display: none; }
+    .footer-link {
+      display: block;
+      text-align: center;
+      margin-top: 2rem;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.85rem;
+      text-decoration: none;
+    }
+    .footer-link:hover { color: rgba(255,255,255,0.8); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="eyebrow">Nouveau mot de passe</div>
+    <h1>Choisis ton <span class="italic">mot de passe.</span></h1>
+    <p class="description">Il doit faire au moins 8 caractères.</p>
+
+    <div id="error-alert" class="alert error hidden"></div>
+    <div id="success-alert" class="alert success hidden">
+      <strong>Mot de passe mis à jour</strong><br>
+      Tu peux maintenant te connecter dans l'app S_Fit avec ton nouveau mot de passe.
+    </div>
+
+    <form id="reset-form">
+      <div class="field">
+        <label for="password">Nouveau mot de passe</label>
+        <input type="password" id="password" autocomplete="new-password" required>
+      </div>
+      <div class="field">
+        <label for="confirm">Confirmer le mot de passe</label>
+        <input type="password" id="confirm" autocomplete="new-password" required>
+      </div>
+      <button type="submit" id="submit-btn">Mettre à jour</button>
+    </form>
+
+    <a href="https://seelofit.com" class="footer-link">← Retour à S_Fit</a>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://tspqykerqgrbedrxbcow.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzcHF5a2VycWdyYmVkcnhiY293Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NTcxMzksImV4cCI6MjA5MjMzMzEzOX0.U1oz-AFkG3dth85YzFQ9igBqGOCm3Vmb1vbqnWnSQh0';
+
+    const form = document.getElementById('reset-form');
+    const errorAlert = document.getElementById('error-alert');
+    const successAlert = document.getElementById('success-alert');
+    const submitBtn = document.getElementById('submit-btn');
+
+    function showError(msg) {
+      errorAlert.textContent = msg;
+      errorAlert.classList.remove('hidden');
+      successAlert.classList.add('hidden');
+    }
+
+    function showSuccess() {
+      errorAlert.classList.add('hidden');
+      successAlert.classList.remove('hidden');
+      form.classList.add('hidden');
+    }
+
+    function parseHash() {
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      return {
+        accessToken: params.get('access_token'),
+        refreshToken: params.get('refresh_token'),
+        type: params.get('type'),
+        error: params.get('error'),
+        errorCode: params.get('error_code'),
+        errorDescription: params.get('error_description'),
+      };
+    }
+
+    const tokens = parseHash();
+
+    if (tokens.error || tokens.errorCode) {
+      const msg = tokens.errorCode === 'otp_expired'
+        ? "Ce lien a expiré. Demande un nouveau email depuis l'app S_Fit."
+        : (tokens.errorDescription || 'Lien invalide. Réessaie depuis l\'app S_Fit.').replace(/\+/g, ' ');
+      showError(msg);
+      form.classList.add('hidden');
+    } else if (!tokens.accessToken || tokens.type !== 'recovery') {
+      showError('Lien invalide. Demande un nouveau email depuis l\'app S_Fit.');
+      form.classList.add('hidden');
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorAlert.classList.add('hidden');
+
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirm').value;
+
+      if (password.length < 8) {
+        showError('Le mot de passe doit faire au moins 8 caractères.');
+        return;
+      }
+      if (password !== confirm) {
+        showError('Les mots de passe ne correspondent pas.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Mise à jour...';
+
+      try {
+        const res = await fetch(SUPABASE_URL + '/auth/v1/user', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': 'Bearer ' + tokens.accessToken,
+          },
+          body: JSON.stringify({ password }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          const msg = data.msg || data.error_description || data.message || 'Erreur lors de la mise à jour.';
+          showError(msg);
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Mettre à jour';
+          return;
+        }
+
+        showSuccess();
+      } catch (err) {
+        showError('Erreur réseau. Vérifie ta connexion et réessaie.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Mettre à jour';
+      }
+    });
+  </script>
+</body>
+</html>
